@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+	<th:block th:include="common/include :: header('新增服务项')" />
+</head>
+<body class="white-bg">
+	<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+		<form class="form-horizontal m" id="form-post-add">
+			<input type="hidden" name="path">
+			<div class="form-group">
+				<label class="col-sm-3 control-label"></label>
+				<div id="uploadBtn" class="col-sm-8 fileinput fileinput-new" data-provides="fileinput">
+					<span class="btn btn-outline-secondary btn-file">
+						<span class="fileinput-new">
+							<a class="btn btn-warning btn-sm" ><i class="fa fa-upload"></i>&nbsp;流程文件部署</a>
+						</span>
+						<input type="file" name="file"  id="bpmnInfoinition" multiple>
+					</span>
+					<span class="fileinput-filename"></span>
+					<a href="#" class="close fileinput-exists" data-dismiss="fileinput" style="float: none">&times;</a>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">服务类型：</label>
+					<div class="col-sm-8">
+						<select name="serviceType" class="form-control m-b" th:with="type=${@dict.getType('bus_audit_type')}">
+							<option th:each="dict : ${type}" th:text="${dict.label}" th:value="${dict.value}"></option>
+						</select>
+					</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">备注：</label>
+				<div class="col-sm-8">
+					<textarea name="info" maxlength="500" class="form-control" rows="3"></textarea>
+				</div>
+			</div>
+		</form>
+	</div>
+	<th:block th:include="common/include :: footer" />
+	<th:block th:include="common/include :: datetimepicker" />
+	<th:block th:include="common/include :: jasny-bootstrap" />
+	<!-- Latest compiled and minified JavaScript -->
+	<script type="text/javascript">
+		var prefix = ctx + "/business/bpmnInfo";
+
+		$('#uploadBtn').on("change.bs.fileinput",function () {
+			var formData = new FormData();
+			let file = $('#bpmnInfoinition')[0].files[0];
+			formData.append("file",file)
+			$.ajax({
+				url:prefix+"/load",
+				data:formData,
+				type:"POST",
+				processData: false,
+				contentType: false,
+				success:function (result) {
+					if (result.code) {
+						$.modal.alertError(result.msg);
+						$('#uploadBtn').fileinput('reset');
+					}
+					$("[name='path']").val(result.data);
+				}
+			})
+		})
+
+		function submitHandler() {
+			if ($.validate.form()) {
+				$.operate.save(prefix + "/deploy", $('#form-post-add').serialize());
+			}
+		}
+	</script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="common/include :: header('详情页面')" />
+</head>
+<body>
+<div class="ui-layout-center">
+    <div class="container-div">
+    <div class="row">
+        <div class="col-sm-12 search-collapse">
+            <div class="col-sm-12" >
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">客户姓名：</label>
+                        <label class="col-sm-6 control-label">[[${statement.customerName}]]</label>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">联系方式：</label>
+                        <label class="col-sm-6 control-label">[[${statement.customerPhone}]]</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-12" >
+
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">车牌号码：</label>
+                        <label class="col-sm-6 control-label">[[${statement.licensePlate}]]</label>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">汽车类型：</label>
+                        <label class="col-sm-6 control-label">[[${statement.carSeries}]]</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-12" >
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">服务类型：</label>
+                        <label class="col-sm-6 control-label">[[${@dict.getLabel('si_service_catalog',statement.serviceType)}]]</label>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">到店时间：</label>
+                        <label class="col-sm-6 control-label" th:text="${#dates.format(statement.actualArrivalTime, 'yyyy-MM-dd HH:mm')}"></label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-12" >
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">总消费金额：</label>
+                        <label class="col-sm-6 control-label" id="totalAmount">[[${statement.totalAmount}]]</label>
+                    </div>
+                </div>
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">实付价格：</label>
+                        <label class="col-sm-6 control-label" id="actuallyPaid">[[${statement.totalAmount-statement.discountAmount}]]</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-12" >
+                <div class="col-sm-6">
+                    <div class="form-group">
+                        <label class="col-sm-6 control-label">优惠价格：</label>
+                        <input class="col-sm-6" type="number" onchange="discountFun()" name="discountAmount" th:field="${statement.discountAmount}"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="btn-group-sm" id="myTools" role="group">
+            <a id="saveBtn" class="btn btn-success" onclick="saveFun()" shiro:hasPermission="business:statementItem:add">
+                <i class="fa fa-plus"></i> 保存
+            </a>
+            <a id="payBtn" class="btn btn-info" onclick="payFun()" shiro:hasPermission="business:statementItem:payStatement">
+                <i class="fa fa-cc-visa"></i> 确认支付
+            </a>
+        </div>
+
+        <div class="col-sm-12 select-table table-striped">
+            <table id="selectedServiceItem"></table>
+        </div>
+    </div>
+    </div>
+</div>
+
+
+<div class="ui-layout-east">
+    <div class="col-sm-12 search-collapse">
+        <form id="post-form">
+            <div class="select-list">
+                <ul>
+                    <li>
+                        服务名称：<input type="text" name="name"/>
+                    </li>
+                    <li>
+                        是否套餐：<select name="carPackage" th:with="type=${@dict.getType('si_car_package')}">
+                        <option value="">所有</option>
+                        <option th:each="dict : ${type}" th:text="${dict.label}" th:value="${dict.value}"></option>
+                    </select>
+                    </li>
+                    <li>
+                        服务分类：<select name="serviceCatalog" th:with="type=${@dict.getType('si_service_catalog')}">
+                        <option value="">所有</option>
+                        <option th:each="dict : ${type}" th:text="${dict.label}" th:value="${dict.value}"></option>
+                    </select>
+                    </li>
+                    <li>
+                        <a class="btn btn-primary btn-rounded btn-sm" onclick="$.table.search()"><i class="fa fa-search"></i>&nbsp;搜索</a>
+                    </li>
+                </ul>
+            </div>
+        </form>
+    </div>
+
+    <div class="btn-group-sm" id="toolbar" role="group"></div>
+
+    <div class="col-sm-12 select-table table-striped" >
+        <table id="bootstrap-table"></table>
+    </div>
+</div>
+<th:block th:include="common/include :: footer" />
+<th:block th:include="common/include :: layout-latest" />
+</body>
+<script>
+    $("body").layout({
+        east__size: "30%",
+    });
+
+    $(function() {
+        var options = {
+            url: "/business/serviceItem/query?saleStatus=1",
+            modalName: "服务单项",
+            uniqueId:"id",
+            columns: [
+                {
+                    field: 'id',
+                    title: '服务id',
+                    visible: false
+                },
+                {
+                    field: 'name',
+                    title: '服务项名称',
+                    sortable: true
+                },
+                {
+                    field: 'originalPrice',
+                    title: '服务项价格',
+                    sortable: true
+                },
+                {
+                    field: 'info',
+                    title: '备注信息',
+                    sortable: true,
+                    formatter: function(value, row, index) {
+                        return $.table.tooltip(value, 0, "open");
+                    }
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs " href="javascript:void(0)" ' +
+                            'onclick="addServiceItem(\'' + row.id + '\')"><i class="glyphicon glyphicon-plus"></i></a> ');
+                        return actions.join('');
+                    }
+                }]
+        };
+        $.table.init(options);
+    });
+
+    $(function() {
+        var options = {
+            url: "/business/statementItem/query?statementId="+[[${statement.id}]],
+            modalName: "已选服务单项",
+            id:"selectedServiceItem",
+            toolbar:"myTools",
+            uniqueId:"itemId",
+            columns: [
+                {
+                    field: 'statementId',
+                    title: '结算单id',
+                    visible: false
+                },
+                {
+                    field: 'itemId',
+                    title: '服务id',
+                    visible: false
+                },
+                {
+                    field: 'itemName',
+                    title: '服务项名称',
+                    sortable: true
+                },
+                {
+                    field: 'itemPrice',
+                    title: '服务项价格',
+                    sortable: true
+                },
+                {
+                    field: 'itemQuantity',
+                    title: '购买数量',
+                    sortable: true
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    formatter: function(value, row, index) {
+                        var actions = [];
+                        actions.push('<a class="btn btn-success btn-xs " href="javascript:void(0)" ' +
+                            'onclick="addQuantity(\'' + row.itemId + '\')"><i class="glyphicon glyphicon-plus"></i></a> ');
+                        actions.push('<a class="btn btn-danger btn-xs " href="javascript:void(0)" ' +
+                            'onclick="reduceQuantity(\'' + row.itemId + '\')"><i class="glyphicon glyphicon-minus"></i></a> ');
+                        return actions.join('');
+                    }
+                }]
+        };
+        $.table.init(options);
+    });
+
+    function addServiceItem(id) {
+        var rs=$('#bootstrap-table').bootstrapTable('getRowByUniqueId',id);
+        var selected=$('#selectedServiceItem').bootstrapTable('getRowByUniqueId',id);
+        if (selected == null) {
+            data = {
+                statementId:'[[${statement.id}]]',
+                itemId:id,
+                itemName:rs.name,
+                itemPrice:rs.originalPrice,
+                itemQuantity:1
+            }
+            $('#selectedServiceItem').bootstrapTable('append', data);
+            discountFun()
+            return ;
+        }
+        $('#selectedServiceItem').bootstrapTable('updateCellByUniqueId', {
+            id: id,
+            field: 'itemQuantity',
+            value: selected.itemQuantity+1
+        })
+        discountFun()
+    }
+    function addQuantity(id) {
+        let $selected = $('#selectedServiceItem');
+        let selected=$selected.bootstrapTable('getRowByUniqueId',id);
+        $selected.bootstrapTable('updateCellByUniqueId', {
+            id: id,
+            field: 'itemQuantity',
+            value: selected.itemQuantity+1
+        })
+        discountFun()
+    }
+
+    function reduceQuantity(id) {
+        let $selected = $('#selectedServiceItem');
+        let selected=$selected.bootstrapTable('getRowByUniqueId',id);
+        if (selected.itemQuantity > 1) {
+            $selected.bootstrapTable('updateCellByUniqueId', {
+                id: id,
+                field: 'itemQuantity',
+                value: selected.itemQuantity-1
+            })
+            discountFun()
+            return;
+        }
+        $selected.bootstrapTable('remove', {field: 'itemId',values: id });
+        discountFun()
+    }
+
+    function discountFun() {
+        let $selected = $('#selectedServiceItem');
+        let data= $selected.bootstrapTable('getData',{useCurrentPage:true,includeHiddenRows:true});
+        let totalPrice = 0;
+        let payable = 0;
+        let Discount = $("[name=discountAmount]").val();
+        $(data).each((index,item)=>totalPrice +=(item.itemQuantity * item.itemPrice))
+        payable = totalPrice - Discount;
+        if (Discount < 0 || Discount > payable) {
+            $("[name=discountAmount]").val(0)
+            $("#actuallyPaid").text(totalPrice)
+            $.modal.alert("未知错误");
+            return
+        }
+        $("#totalAmount").text(totalPrice)
+        $("#actuallyPaid").text(payable)
+    }
+    function saveFun() {
+        let list = $('#selectedServiceItem').bootstrapTable('getData',{useCurrentPage:true,includeHiddenRows:true});
+        // 服务单项数量
+        let totalQuantity = 0;
+        list.forEach(item => totalQuantity += item.itemQuantity);
+        let data = {
+            // 总消费金额
+            totalPrice:$("#actuallyPaid").text(),
+            // 折扣
+            discountAmount: $("[name=discountAmount]").val(),
+            // 服务数量
+            totalQuantity:totalQuantity,
+            list:list
+        }
+        $.modal.confirm("确认要保存吗？",function(result) {
+            var config = {
+                url: "/business/statementItem/saveItems",
+                type: 'post',
+                dataType: 'json',
+                contentType:"application/json",
+                data: JSON.stringify(data)
+            };
+            $.ajax(config)
+            $.modal.msg(result.msg);
+        })
+    }
+    function payFun() {
+        $.modal.confirm("确认已经支付了吗？", function() {
+            $.operate.submit("/business/statementItem/pay?statementId="+[[${statement.id}]], "post");
+        })
+
+    }
+</script>
+</html>

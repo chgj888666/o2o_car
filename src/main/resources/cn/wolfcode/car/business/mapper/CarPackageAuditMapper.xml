@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.wolfcode.car.business.mapper.CarPackageAuditMapper" >
+  <resultMap id="BaseResultMap" type="cn.wolfcode.car.business.domain.CarPackageAudit" >
+    <id column="id" property="id" />
+    <result column="service_item_id" property="serviceItemId" />
+    <result column="service_item_info" property="serviceItemInfo" />
+    <result column="service_item_price" property="serviceItemPrice" />
+    <result column="instance_id" property="instanceId" />
+    <result column="creator" property="creator" />
+    <result column="auditor_id" property="auditorId" />
+    <result column="bpmnInfo_id" property="bpmnInfoId" />
+    <result column="info" property="info" />
+    <result column="status" property="status" />
+    <result column="audit_time" property="auditTime" />
+    <result column="create_time" property="createTime" />
+    <result column="item_name" property="serviceItem.name" />
+    <result column="user_name" property="auditor.userName" />
+  </resultMap>
+  <delete id="deleteByPrimaryKey" >
+    delete from bus_car_package_audit
+    where id = #{id}
+  </delete>
+  <insert id="insert" useGeneratedKeys="true" keyProperty="id" >
+    insert into bus_car_package_audit (service_item_id, service_item_info, service_item_price, instance_id, 
+      creator, auditor_id, bpmnInfo_id, info, status, audit_time, create_time
+      )
+    values (#{serviceItemId}, #{serviceItemInfo}, #{serviceItemPrice}, #{instanceId}, 
+      #{creator}, #{auditorId}, #{bpmnInfoId}, #{info}, #{status}, #{auditTime}, #{createTime}
+      )
+  </insert>
+  <update id="updateByPrimaryKey" >
+    update bus_car_package_audit
+    set
+      instance_id = #{instanceId},
+      info = #{info},
+      status = #{status},
+      auditor_id=#{auditorId},
+      audit_time = now()
+    where id = #{id}
+  </update>
+  <update id="changeStatus">
+    update bus_car_package_audit
+    set  status = #{status},audit_time = now()
+    where id = #{id}
+  </update>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" >
+    select id, service_item_id, service_item_info, service_item_price, instance_id, creator, 
+    auditor_id, bpmnInfo_id, info, status, audit_time, create_time
+    from bus_car_package_audit
+    where id = #{id}
+  </select>
+  <select id="selectAll" resultMap="BaseResultMap" >
+    select id, service_item_id, service_item_info, service_item_price, instance_id, creator, 
+    auditor_id, bpmnInfo_id, info, status, audit_time, create_time
+    from bus_car_package_audit
+  </select>
+  <select id="selectForList" resultMap="BaseResultMap" >
+    SELECT
+      packageAudit.id,
+      packageAudit.service_item_id,
+      packageAudit.service_item_info,
+      packageAudit.service_item_price,
+      packageAudit.instance_id,
+      packageAudit.creator,
+      packageAudit.auditor_id,
+      packageAudit.bpmnInfo_id,
+      packageAudit.info,
+      packageAudit.status,
+      packageAudit.audit_time,
+      packageAudit.create_time,
+      serviceItem.name item_name,
+      auditor.user_name
+    FROM
+      bus_car_package_audit packageAudit
+        JOIN bus_service_item serviceItem ON service_item_id = serviceItem.id
+        JOIN sys_user auditor ON auditor_id = auditor.id
+    <where>
+      <if test="creator != null and creator != ''">
+        and creator = #{creator}
+      </if>
+      <if test="id != null">
+        and auditor_id = #{id}
+      </if>
+      <if test="status != null">
+        and packageAudit.status = #{status}
+      </if>
+    </where>
+
+  </select>
+</mapper>

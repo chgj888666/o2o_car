@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
+<head>
+	<th:block th:include="common/include :: header('新增服务项')" />
+</head>
+<body class="white-bg">
+	<div class="wrapper wrapper-content animated fadeInRight ibox-content">
+		<form class="form-horizontal m" id="form-post-add">
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">服务项名称：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="name" id="postName" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">服务项原价：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="originalPrice" id="postCode" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label is-required">服务项折扣价：</label>
+				<div class="col-sm-8">
+					<input class="form-control" type="text" name="discountPrice" id="postSort" required>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">是否套餐：</label>
+				<div class="col-sm-8">
+					<div class="radio-box" th:each="dict : ${@dict.getType('si_car_package')}">
+						<input type="radio" th:id="${dict.id}" name="carPackage" th:value="${dict.value}" th:checked="${dict.isDefault}">
+						<label th:for="${dict.id}" th:text="${dict.label}"></label>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">服务分类：</label>
+				<div class="col-sm-8">
+					<div class="form-group">
+						<div class="col-sm-8">
+							<select name="serviceCatalog" class="form-control m-b" th:with="type=${@dict.getType('si_service_catalog')}">
+								<option th:each="dict : ${type}" th:text="${dict.label}" th:value="${dict.value}"></option>
+							</select>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="col-sm-3 control-label">备注：</label>
+				<div class="col-sm-8">
+					<textarea name="info" maxlength="500" class="form-control" rows="3"></textarea>
+				</div>
+			</div>
+		</form>
+	</div>
+	<th:block th:include="common/include :: footer" />
+	<script type="text/javascript">
+		var prefix = ctx + "/business/serviceItem";
+		function submitHandler() {
+	        if ($.validate.form()) {
+	        	$.operate.save(prefix + "/add", $('#form-post-add').serialize());
+	        }
+	    }
+	</script>
+</body>
+</html>

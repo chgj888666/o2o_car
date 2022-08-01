@@ -1,0 +1,140 @@
+
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" xmlns:shiro="http://www.pollix.at/thymeleaf/shiro">
+<head>
+    <th:block th:include="common/include :: header('详情页面')" />
+</head>
+<body>
+<div class="ui-layout-center">
+    <div class="container-div">
+        <div class="row">
+            <div class="col-sm-12 search-collapse">
+                <div class="col-sm-12" >
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">客户姓名：</label>
+                            <label class="col-sm-6 control-label">[[${statement.customerName}]]</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">联系方式：</label>
+                            <label class="col-sm-6 control-label">[[${statement.customerPhone}]]</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12" >
+
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">车牌号码：</label>
+                            <label class="col-sm-6 control-label">[[${statement.licensePlate}]]</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">汽车类型：</label>
+                            <label class="col-sm-6 control-label">[[${statement.carSeries}]]</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12" >
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">服务类型：</label>
+                            <label class="col-sm-6 control-label">[[${@dict.getLabel('si_service_catalog',statement.serviceType)}]]</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">到店时间：</label>
+                            <label class="col-sm-6 control-label" th:text="${#dates.format(statement.actualArrivalTime, 'yyyy-MM-dd HH:mm')}"></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12" >
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">总消费金额：</label>
+                            <label class="col-sm-6 control-label" id="totalAmount">[[${statement.totalAmount}]]</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">实付价格：</label>
+                            <label class="col-sm-6 control-label" id="actuallyPaid">[[${statement.totalAmount-statement.discountAmount}]]</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-12" >
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <label class="col-sm-6 control-label">优惠价格：</label>
+                            <label class="col-sm-6 control-label" id="discountAmount">[[${statement.discountAmount}]]</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-group-sm" id="myTools" role="group">
+                <a id="saveBtn" class="btn btn-success" onclick="saveFun()" shiro:hasPermission="business:statementItem:add">
+                    <i class="glyphicon glyphicon-print"></i> 打印
+                </a>
+                <a id="payBtn" class="btn btn-warning" onclick="payFun()" shiro:hasPermission="business:statementItem:payStatement">
+                    <i class="glyphicon glyphicon-folder-open"></i> 导出
+                </a>
+            </div>
+
+            <div class="col-sm-12 select-table table-striped">
+                <table id="selectedServiceItem"></table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<th:block th:include="common/include :: footer" />
+<th:block th:include="common/include :: layout-latest" />
+</body>
+<script>
+
+    $(function() {
+        var options = {
+            url: "/business/statementItem/query?statementId="+[[${statement.id}]],
+            modalName: "已选服务单项",
+            id:"selectedServiceItem",
+            toolbar:"myTools",
+            uniqueId:"itemId",
+            columns: [
+                {
+                    field: 'statementId',
+                    title: '结算单id',
+                    visible: false
+                },
+                {
+                    field: 'itemId',
+                    title: '服务id',
+                    visible: false
+                },
+                {
+                    field: 'itemName',
+                    title: '服务项名称',
+                    sortable: true
+                },
+                {
+                    field: 'itemPrice',
+                    title: '服务项价格',
+                    sortable: true
+                },
+                {
+                    field: 'itemQuantity',
+                    title: '购买数量',
+                    sortable: true
+                }]
+        };
+        $.table.init(options);
+    });
+
+
+
+</script>
+</html>
